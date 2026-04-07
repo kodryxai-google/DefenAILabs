@@ -5,13 +5,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Shield, 
-  ChevronRight, 
-  Menu, 
-  X, 
-  ArrowRight, 
-  CheckCircle2, 
+import {
+  Shield,
+  ChevronRight,
+  Menu,
+  X,
+  ArrowRight,
+  CheckCircle2,
   ExternalLink,
   Globe,
   Cpu,
@@ -25,7 +25,12 @@ import {
   Twitter,
   Linkedin,
   Github,
-  Check
+  Check,
+  AlertTriangle,
+  ClipboardList,
+  Gauge,
+  UserCheck,
+  Award
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { 
@@ -198,7 +203,7 @@ const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <img src="/Logo.png" alt="DefenAI Labs" className="h-32 w-auto min-w-[320px] object-contain mix-blend-multiply brightness-[1.1] contrast-[1.2]" referrerPolicy="no-referrer" />
+          <img src="/DefenAI.png" alt="DefenAI Labs" className="h-20 w-auto object-contain" referrerPolicy="no-referrer" />
         </div>
 
         <div className="hidden md:flex items-center gap-10">
@@ -279,7 +284,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-32 overflow-hidden mesh-gradient">
+    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-surface">
       <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -443,7 +448,7 @@ const ProductSection = () => {
   };
 
   return (
-    <section id="products" className="section-padding bg-surface-container-low">
+    <section id="products" className="section-padding bg-[#eef0f4]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <span className="label-sm text-primary mb-6 inline-block">Our Platforms</span>
@@ -510,7 +515,10 @@ const ProductSection = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.4 }}
-                    className="surface-card flex flex-col group hover:scale-[1.02]"
+                    className={cn(
+                      "surface-card flex flex-col group hover:scale-[1.02]",
+                      product.id === 'ffai' && "ring-2 ring-primary/30 shadow-[0_0_40px_rgba(79,70,229,0.12)] lg:col-span-3"
+                    )}
                   >
                     <div className="flex justify-between items-start mb-8">
                       <div className="relative group/icon">
@@ -521,6 +529,11 @@ const ProductSection = () => {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
+                        {product.id === 'ffai' && (
+                          <span className="label-sm px-3 py-1 rounded-full bg-primary text-on-primary">
+                            Flagship
+                          </span>
+                        )}
                         <span className={cn(
                           "label-sm px-3 py-1 rounded-full flex items-center gap-2",
                           product.status === "Live" ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-yellow-500/10 text-yellow-600"
@@ -576,7 +589,7 @@ const ProductSection = () => {
 
 const ComplianceSection = () => {
   return (
-    <section id="compliance" className="section-padding bg-surface relative overflow-hidden">
+    <section id="compliance" className="section-padding bg-[#eef0f4] relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">Global Readiness</span>
@@ -589,18 +602,18 @@ const ComplianceSection = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
           {[
-            { name: 'EU AI Act', desc: 'High-Risk Systems' },
-            { name: 'ISO 42001', desc: 'AI Management' },
-            { name: 'NIST AI RMF', desc: 'Tier 3+ Maturity' },
-            { name: 'DPDP Act', desc: 'India Compliance' },
-            { name: 'SOC2 / ISO 27001', desc: 'Security Standards' },
+            { name: 'EU AI Act', desc: 'High-Risk Systems', icon: AlertTriangle },
+            { name: 'ISO 42001', desc: 'AI Management', icon: ClipboardList },
+            { name: 'NIST AI RMF', desc: 'Tier 3+ Maturity', icon: Gauge },
+            { name: 'DPDP Act', desc: 'India Compliance', icon: UserCheck },
+            { name: 'SOC2 / ISO 27001', desc: 'Security Standards', icon: Award },
           ].map((item, i) => (
             <div key={i} className="text-center group">
               <div className="relative w-20 h-20 mx-auto mb-8">
                 <div className="absolute inset-0 bg-primary/10 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative w-20 h-20 bg-surface-container-low rounded-[2rem] flex items-center justify-center border border-primary/5 group-hover:border-primary/20 transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3">
                   <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent rounded-[2rem]" />
-                  <Globe className="w-9 h-9 text-primary relative z-10" strokeWidth={1.5} />
+                  <item.icon className="w-9 h-9 text-primary relative z-10" strokeWidth={1.5} />
                 </div>
               </div>
               <h4 className="title-lg text-base mb-2">{item.name}</h4>
@@ -648,12 +661,12 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-surface-container-low pt-32 pb-16 px-6">
+    <footer className="bg-surface pt-32 pb-16 px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
-          <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24 divide-y lg:divide-y-0 lg:divide-x divide-on-surface/10">
+          <div className="space-y-8 lg:pr-16">
             <div className="flex items-center gap-3">
-              <img src="/Logo.png" alt="DefenAI Labs" className="h-40 w-auto min-w-[400px] object-contain mix-blend-multiply brightness-[1.1] contrast-[1.2]" referrerPolicy="no-referrer" />
+              <img src="/DefenAI.png" alt="DefenAI Labs" className="h-24 w-auto object-contain" referrerPolicy="no-referrer" />
             </div>
             <p className="body-md">
               Building indigenous, sovereign AI security solutions for enterprises, 
@@ -686,7 +699,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div>
+          <div className="lg:px-16">
             <h4 className="label-sm text-on-surface mb-8">Platforms</h4>
             <ul className="space-y-5">
               {PRODUCTS.slice(0, 5).map(p => (
@@ -697,7 +710,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="lg:px-16">
             <h4 className="label-sm text-on-surface mb-8">Company</h4>
             <ul className="space-y-5">
               {[
@@ -713,7 +726,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="lg:pl-16">
             <h4 className="label-sm text-on-surface mb-8">Newsletter</h4>
             <p className="body-md mb-6">Stay updated with the latest in AI security.</p>
             <form className="flex gap-3" onSubmit={(e) => e.preventDefault()}>
@@ -742,7 +755,7 @@ const Footer = () => {
 
 const IntegrationSection = () => {
   return (
-    <section id="integration" className="section-padding bg-surface relative">
+    <section id="integration" className="section-padding bg-[#eef0f4] relative">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <div>
@@ -833,7 +846,7 @@ const IntegrationSection = () => {
 
 const ServicesSection = () => {
   return (
-    <section id="services" className="section-padding bg-surface-container-low">
+    <section id="services" className="section-padding bg-surface">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">Expert Solutions</span>
@@ -892,7 +905,7 @@ const ServicesSection = () => {
 
 const WhySection = () => {
   return (
-    <section id="why-defenai" className="section-padding bg-surface relative overflow-hidden">
+    <section id="why-defenai" className="section-padding bg-[#eef0f4] relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">The DefenAI Advantage</span>
@@ -956,7 +969,7 @@ const WhySection = () => {
 
 const TrustedBySection = () => {
   return (
-    <section className="section-padding bg-surface-container-low">
+    <section className="section-padding bg-surface">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">Our Network</span>
@@ -971,7 +984,7 @@ const TrustedBySection = () => {
           {TRUSTED_BY.map((item, i) => (
             <div key={i} className="text-center group">
               <div className="w-20 h-20 mx-auto bg-surface-container-lowest rounded-[2rem] flex items-center justify-center mb-6 tonal-shadow transition-all group-hover:scale-110">
-                <Globe className="w-8 h-8 text-on-surface-variant/40 group-hover:text-primary transition-colors" />
+                <item.icon className="w-8 h-8 text-on-surface-variant/40 group-hover:text-primary transition-colors" />
               </div>
               <h4 className="label-sm text-on-surface mb-1">{item.name}</h4>
               <p className="label-sm text-[9px] text-on-surface-variant/40">{item.desc}</p>
@@ -980,18 +993,32 @@ const TrustedBySection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {TESTIMONIALS.map((t, i) => (
-            <div key={i} className="surface-card p-10 relative">
-              <div className="text-primary text-6xl font-serif absolute top-6 left-6 opacity-5">"</div>
-              <p className="body-md italic mb-8 relative z-10 text-on-surface leading-relaxed">
-                {t.quote}
-              </p>
-              <div>
-                <div className="title-lg text-sm mb-1">{t.author}</div>
-                <div className="label-sm text-on-surface-variant/60">{t.company}</div>
+          {TESTIMONIALS.map((t, i) => {
+            const initials = t.company.split(' ').slice(0, 2).map((w: string) => w[0]).join('');
+            const colors = [
+              { bg: 'bg-primary/10', text: 'text-primary' },
+              { bg: 'bg-indigo-100', text: 'text-indigo-600' },
+              { bg: 'bg-violet-100', text: 'text-violet-600' },
+            ];
+            const c = colors[i % colors.length];
+            return (
+              <div key={i} className="surface-card p-10 relative">
+                <div className="text-primary text-6xl font-serif absolute top-6 left-6 opacity-5">"</div>
+                <p className="body-md italic mb-8 relative z-10 text-on-surface leading-relaxed">
+                  {t.quote}
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0", c.bg, c.text)}>
+                    {initials}
+                  </div>
+                  <div>
+                    <div className="title-lg text-sm mb-0.5">{t.author}</div>
+                    <div className="label-sm text-on-surface-variant/60">{t.company}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1022,7 +1049,7 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="section-padding bg-surface-container-low">
+    <section id="contact" className="section-padding bg-[#eef0f4]">
       <div className="max-w-7xl mx-auto">
         <div className="surface-card p-10 md:p-20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -mr-64 -mt-64" />

@@ -1,20 +1,25 @@
-import { 
-  Shield, 
-  Lock, 
-  Activity, 
-  FileCheck, 
-  Search, 
-  Key, 
-  Zap, 
-  Gavel, 
-  FileText, 
-  Cpu, 
-  Bug, 
-  TestTube, 
-  Layers, 
-  Code, 
-  CheckCircle, 
-  Network
+import {
+  Shield,
+  Lock,
+  Activity,
+  FileCheck,
+  Search,
+  Key,
+  Zap,
+  Gavel,
+  FileText,
+  Cpu,
+  Bug,
+  TestTube,
+  Layers,
+  Code,
+  CheckCircle,
+  Network,
+  Landmark,
+  ShieldCheck,
+  Briefcase,
+  Scale,
+  Banknote
 } from "lucide-react";
 
 export const CORE_CAPABILITIES = [
@@ -304,11 +309,11 @@ export const TESTIMONIALS = [
 ];
 
 export const TRUSTED_BY = [
-  { name: "Government Agencies", desc: "Central and state government departments" },
-  { name: "Defense Organizations", desc: "Armed forces and security agencies" },
-  { name: "Fortune 500", desc: "Leading global enterprises" },
-  { name: "Law Enforcement", desc: "Police and investigation agencies" },
-  { name: "Financial Institutions", desc: "Banks and fintech companies" },
-  { name: "Tech Giants", desc: "Technology and software companies" }
+  { name: "Government Agencies", desc: "Central and state government departments", icon: Landmark },
+  { name: "Defense Organizations", desc: "Armed forces and security agencies", icon: ShieldCheck },
+  { name: "Fortune 500", desc: "Leading global enterprises", icon: Briefcase },
+  { name: "Law Enforcement", desc: "Police and investigation agencies", icon: Scale },
+  { name: "Financial Institutions", desc: "Banks and fintech companies", icon: Banknote },
+  { name: "Tech Giants", desc: "Technology and software companies", icon: Cpu }
 ];
 
