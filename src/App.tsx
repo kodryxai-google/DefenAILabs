@@ -203,7 +203,7 @@ const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <img src="/DefenAI.png" alt="DefenAI Labs" className="h-20 w-auto object-contain" referrerPolicy="no-referrer" />
+          <img src={`${import.meta.env.BASE_URL}DefenAI.png`} alt="DefenAI Labs" className="h-20 w-auto object-contain" referrerPolicy="no-referrer" />
         </div>
 
         <div className="hidden md:flex items-center gap-10">
@@ -666,7 +666,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24 divide-y lg:divide-y-0 lg:divide-x divide-on-surface/10">
           <div className="space-y-8 lg:pr-16">
             <div className="flex items-center gap-3">
-              <img src="/DefenAI.png" alt="DefenAI Labs" className="h-24 w-auto object-contain" referrerPolicy="no-referrer" />
+              <img src={`${import.meta.env.BASE_URL}DefenAI.png`} alt="DefenAI Labs" className="h-24 w-auto object-contain" referrerPolicy="no-referrer" />
             </div>
             <p className="body-md">
               Building indigenous, sovereign AI security solutions for enterprises, 
