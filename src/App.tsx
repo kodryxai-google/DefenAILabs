@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield,
@@ -43,6 +43,179 @@ import {
   TRUSTED_BY 
 } from './constants';
 
+// ---------------------------------------------------------------------------
+// Canvas particle network background — matches reference site animation
+// ---------------------------------------------------------------------------
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  opacity: number;
+  pulseSpeed: number;
+  pulseOffset: number;
+}
+
+const ParticleBackground = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animFrameRef = useRef<number>(0);
+  const particlesRef = useRef<Particle[]>([]);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const scanYRef = useRef(0);
+
+  const PRIMARY   = { r: 30,  g: 106, b: 255 }; // #1E6AFF brand blue
+  const ACCENT    = { r: 97,  g: 74,  b: 252 }; // #614afc
+  const MAX_DIST  = 150;
+  const MOUSE_DIST = 200;
+  const COUNT     = 70;
+
+  const initParticles = useCallback((w: number, h: number) => {
+    particlesRef.current = Array.from({ length: COUNT }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      radius: Math.random() * 1.5 + 0.8,
+      opacity: Math.random() * 0.5 + 0.2,
+      pulseSpeed: Math.random() * 0.02 + 0.008,
+      pulseOffset: Math.random() * Math.PI * 2,
+    }));
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initParticles(canvas.width, canvas.height);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const onMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', onMouseMove);
+
+    let t = 0;
+
+    const draw = () => {
+      const { width: W, height: H } = canvas;
+      ctx.clearRect(0, 0, W, H);
+      t += 0.01;
+
+      // --- moving perspective grid ---
+      ctx.save();
+      const gridOffset = (t * 18) % 50;
+      ctx.strokeStyle = `rgba(${PRIMARY.r},${PRIMARY.g},${PRIMARY.b},0.06)`;
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 50) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = -50 + gridOffset; y < H; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      ctx.restore();
+
+      // --- scan line ---
+      scanYRef.current = (scanYRef.current + 0.8) % H;
+      const scanGrad = ctx.createLinearGradient(0, scanYRef.current - 60, 0, scanYRef.current + 4);
+      scanGrad.addColorStop(0, `rgba(${PRIMARY.r},${PRIMARY.g},${PRIMARY.b},0)`);
+      scanGrad.addColorStop(1, `rgba(${PRIMARY.r},${PRIMARY.g},${PRIMARY.b},0.08)`);
+      ctx.fillStyle = scanGrad;
+      ctx.fillRect(0, scanYRef.current - 60, W, 64);
+
+      // --- particles ---
+      const particles = particlesRef.current;
+      const mouse = mouseRef.current;
+
+      particles.forEach((p, i) => {
+        // move
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+
+        // pulse opacity
+        const pulse = Math.sin(t * 60 * p.pulseSpeed + p.pulseOffset) * 0.2;
+        const alpha = Math.min(1, Math.max(0, p.opacity + pulse));
+
+        // particle-to-particle connections
+        for (let j = i + 1; j < particles.length; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x;
+          const dy = p.y - q.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MAX_DIST) {
+            const lineAlpha = (1 - dist / MAX_DIST) * 0.15;
+            const c = i % 5 === 0 ? ACCENT : PRIMARY;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${lineAlpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+
+        // particle-to-mouse connections
+        const mdx = p.x - mouse.x;
+        const mdy = p.y - mouse.y;
+        const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+        if (mdist < MOUSE_DIST) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(${PRIMARY.r},${PRIMARY.g},${PRIMARY.b},${0.2 * (1 - mdist / MOUSE_DIST)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+
+        // dot
+        const c = i % 7 === 0 ? ACCENT : PRIMARY;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${alpha})`;
+        ctx.fill();
+
+        // glow halo on larger particles
+        if (p.radius > 1.8) {
+          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 6);
+          grd.addColorStop(0, `rgba(${c.r},${c.g},${c.b},${alpha * 0.3})`);
+          grd.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius * 6, 0, Math.PI * 2);
+          ctx.fillStyle = grd;
+          ctx.fill();
+        }
+      });
+
+      animFrameRef.current = requestAnimationFrame(draw);
+    };
+
+    animFrameRef.current = requestAnimationFrame(draw);
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', onMouseMove);
+      cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [initParticles]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none z-0"
+      style={{ opacity: 0.85 }}
+    />
+  );
+};
+
 const ProductModal = ({ product, isOpen, onClose }: { product: any, isOpen: boolean, onClose: () => void }) => {
   if (!isOpen || !product) return null;
 
@@ -80,7 +253,7 @@ const ProductModal = ({ product, isOpen, onClose }: { product: any, isOpen: bool
                 </span>
                 <span className={cn(
                   "label-sm px-3 py-1 rounded-full flex items-center gap-2",
-                  product.status === "Live" ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-yellow-500/10 text-yellow-600"
+                  product.status === "Live" ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-yellow-500/10 text-yellow-400"
                 )}>
                   {product.status === "Live" && <div className="w-2 h-2 rounded-full bg-on-tertiary-fixed animate-pulse-dot" />}
                   {product.status}
@@ -199,11 +372,11 @@ const Navbar = () => {
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 py-4",
-      isScrolled ? "backdrop-blur-md tonal-shadow" : "bg-transparent"
+      isScrolled ? "bg-surface/90 backdrop-blur-md border-b border-surface-container-high/40" : "bg-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <img src={`${import.meta.env.BASE_URL}DefenAI.png`} alt="DefenAI Labs" className="h-20 w-auto object-contain" referrerPolicy="no-referrer" />
+          <img src={`${import.meta.env.BASE_URL}DefenAI.png`} alt="DefenAI Labs" className="h-36 w-auto object-contain" referrerPolicy="no-referrer" />
         </div>
 
         <div className="hidden md:flex items-center gap-10">
@@ -284,7 +457,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-surface">
+    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -385,7 +558,7 @@ const Hero = () => {
 
 const FrameworkSection = () => {
   return (
-    <section id="framework" className="section-padding bg-surface relative">
+    <section id="framework" className="section-padding bg-transparent relative">
       <div className="max-w-7xl mx-auto">
         <div className="text-left mb-24 max-w-3xl">
           <span className="label-sm text-primary mb-6 inline-block">The SLM Standard</span>
@@ -448,7 +621,7 @@ const ProductSection = () => {
   };
 
   return (
-    <section id="products" className="section-padding bg-[#eef0f4]">
+    <section id="products" className="section-padding bg-surface-container-low/50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <span className="label-sm text-primary mb-6 inline-block">Our Platforms</span>
@@ -517,7 +690,7 @@ const ProductSection = () => {
                     transition={{ duration: 0.4 }}
                     className={cn(
                       "surface-card flex flex-col group hover:scale-[1.02]",
-                      product.id === 'ffai' && "ring-2 ring-primary/30 shadow-[0_0_40px_rgba(79,70,229,0.12)] lg:col-span-3"
+                      product.id === 'ffai' && "ring-2 ring-primary/30 shadow-[0_0_48px_rgba(0,167,146,0.15)] lg:col-span-3"
                     )}
                   >
                     <div className="flex justify-between items-start mb-8">
@@ -536,7 +709,7 @@ const ProductSection = () => {
                         )}
                         <span className={cn(
                           "label-sm px-3 py-1 rounded-full flex items-center gap-2",
-                          product.status === "Live" ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-yellow-500/10 text-yellow-600"
+                          product.status === "Live" ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-yellow-500/10 text-yellow-400"
                         )}>
                           {product.status === "Live" && <div className="w-1.5 h-1.5 rounded-full bg-on-tertiary-fixed animate-pulse-dot" />}
                           {product.status}
@@ -589,7 +762,7 @@ const ProductSection = () => {
 
 const ComplianceSection = () => {
   return (
-    <section id="compliance" className="section-padding bg-[#eef0f4] relative overflow-hidden">
+    <section id="compliance" className="section-padding bg-transparent relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">Global Readiness</span>
@@ -661,7 +834,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-surface pt-32 pb-16 px-6">
+    <footer className="bg-surface/80 pt-32 pb-16 px-6 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24 divide-y lg:divide-y-0 lg:divide-x divide-on-surface/10">
           <div className="space-y-8 lg:pr-16">
@@ -755,7 +928,7 @@ const Footer = () => {
 
 const IntegrationSection = () => {
   return (
-    <section id="integration" className="section-padding bg-[#eef0f4] relative">
+    <section id="integration" className="section-padding bg-surface-container-low/50 relative">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <div>
@@ -846,7 +1019,7 @@ const IntegrationSection = () => {
 
 const ServicesSection = () => {
   return (
-    <section id="services" className="section-padding bg-surface">
+    <section id="services" className="section-padding bg-transparent">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">Expert Solutions</span>
@@ -905,7 +1078,7 @@ const ServicesSection = () => {
 
 const WhySection = () => {
   return (
-    <section id="why-defenai" className="section-padding bg-[#eef0f4] relative overflow-hidden">
+    <section id="why-defenai" className="section-padding bg-transparent relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">The DefenAI Advantage</span>
@@ -969,7 +1142,7 @@ const WhySection = () => {
 
 const TrustedBySection = () => {
   return (
-    <section className="section-padding bg-surface">
+    <section className="section-padding bg-surface-container-low/50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <span className="label-sm text-primary mb-6 inline-block">Our Network</span>
@@ -997,8 +1170,8 @@ const TrustedBySection = () => {
             const initials = t.company.split(' ').slice(0, 2).map((w: string) => w[0]).join('');
             const colors = [
               { bg: 'bg-primary/10', text: 'text-primary' },
-              { bg: 'bg-indigo-100', text: 'text-indigo-600' },
-              { bg: 'bg-violet-100', text: 'text-violet-600' },
+              { bg: 'bg-indigo-900/30', text: 'text-indigo-400' },
+              { bg: 'bg-violet-900/30', text: 'text-violet-400' },
             ];
             const c = colors[i % colors.length];
             return (
@@ -1049,7 +1222,7 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="section-padding bg-[#eef0f4]">
+    <section id="contact" className="section-padding bg-surface-container-low/50">
       <div className="max-w-7xl mx-auto">
         <div className="surface-card p-10 md:p-20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -mr-64 -mt-64" />
@@ -1174,7 +1347,7 @@ const RequestAccessForm = () => {
   };
 
   return (
-    <section id="request-access" className="section-padding bg-surface">
+    <section id="request-access" className="section-padding bg-transparent">
       <div className="max-w-4xl mx-auto">
         <div className="surface-card p-10 md:p-20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -mr-64 -mt-64" />
@@ -1258,6 +1431,7 @@ const RequestAccessForm = () => {
 export default function App() {
   return (
     <div className="font-sans">
+      <ParticleBackground />
       <Navbar />
       <main>
         <Hero />

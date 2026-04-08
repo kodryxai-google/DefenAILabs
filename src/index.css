@@ -4,24 +4,28 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  
-  --color-primary: #4F46E5;
-  --color-primary-container: #4f46e5;
+
+  /* Dark cyber theme */
+  --color-primary: #1E6AFF;
+  --color-primary-container: #1E6AFF;
   --color-on-primary: #ffffff;
-  
-  --color-surface: #f7f9fb;
-  --color-surface-container-low: #f2f4f6;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-bright: #f7f9fb;
-  
-  --color-on-surface: #191c1e;
-  --color-on-surface-variant: #475569;
-  
-  --color-outline-variant: rgba(199, 196, 216, 0.15);
-  
-  --color-tertiary-fixed: #6ffbbe;
-  --color-on-tertiary-fixed: #002113;
-  
+
+  --color-surface: #010203;
+  --color-surface-container-low: #0b121a;
+  --color-surface-container-lowest: #03060b;
+  --color-surface-container-high: #141b24;
+  --color-surface-bright: #010203;
+
+  --color-on-surface: #f8f8f8;
+  --color-on-surface-variant: #8f8f8f;
+
+  --color-outline-variant: rgba(20, 27, 36, 0.9);
+
+  --color-tertiary-fixed: #1E6AFF;
+  --color-on-tertiary-fixed: #ffffff;
+
+  --color-accent: #614afc;
+
   --animate-float: float 6s ease-in-out infinite;
   --animate-pulse-dot: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -61,11 +65,11 @@ body {
 }
 
 .glass-header {
-  @apply bg-surface-container-lowest/80 backdrop-blur-md;
+  @apply bg-surface/80 backdrop-blur-md border-b border-surface-container-high/40;
 }
 
 @utility tonal-shadow {
-  box-shadow: 0 32px 64px -12px rgba(25, 28, 30, 0.04);
+  box-shadow: 0 0 40px rgba(30, 106, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .section-padding {
@@ -83,18 +87,18 @@ body {
 }
 
 .grid-pattern {
-  background-image: linear-gradient(to right, rgba(79, 70, 229, 0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(79, 70, 229, 0.05) 1px, transparent 1px);
+  background-image: linear-gradient(to right, rgba(30, 106, 255, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(30, 106, 255, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
 
 .btn-primary {
-  @apply bg-primary text-on-primary px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:opacity-90 active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)];
+  @apply bg-primary text-on-primary px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:opacity-90 active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_24px_rgba(30,106,255,0.5)];
 }
 
 .btn-secondary {
-  @apply border border-outline-variant text-primary px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:bg-surface-container-low active:scale-95;
+  @apply border border-primary/40 text-primary px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:bg-primary/10 active:scale-95;
 }
 
 .btn-tertiary {
@@ -102,6 +106,5 @@ body {
 }
 
 .surface-card {
-  @apply bg-surface-container-lowest rounded-[2rem] tonal-shadow p-8 transition-all duration-300;
+  @apply bg-surface-container-lowest rounded-[2rem] tonal-shadow p-8 transition-all duration-300 border border-surface-container-high/60;
 }
-
